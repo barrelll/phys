@@ -1,0 +1,14 @@
+{
+  "name": "crime-the-awakening",
+  "version": "0.0.1",
+  "description": "Do crime, steal sushi from sushi bars",
+  "main": "script.mjs",
+  "directories": {
+    "test": "test"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "barrelll",
+  "license": "MIT"
+}
