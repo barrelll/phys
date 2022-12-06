@@ -2,13 +2,21 @@
   "name": "crime-the-awakening",
   "version": "0.0.1",
   "description": "Do crime, steal sushi from sushi bars",
-  "main": "script.mjs",
+  "main": "index.js",
   "directories": {
     "test": "test"
   },
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "mocha --reporter list"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/barrelll/crime.git"
   },
   "author": "barrelll",
-  "license": "MIT"
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/barrelll/crime/issues"
+  },
+  "homepage": "https://github.com/barrelll/crime#readme"
 }
