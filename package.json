@@ -21,7 +21,14 @@
   },
   "homepage": "https://github.com/barrelll/crime#readme",
   "devDependencies": {
+    "@wdio/browser-runner": "^8.0.7",
+    "@wdio/cli": "^8.0.7",
+    "@wdio/mocha-framework": "^8.0.7",
+    "@wdio/spec-reporter": "^8.0.7",
     "chai": "^4.3.7",
-    "mocha": "^10.1.0",
+    "mocha": "^10.1.0"
+  },
+  "dependencies": {
+    "lit": "^2.4.1"
   }
 }

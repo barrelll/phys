@@ -1,3 +1,5 @@
 node_modules
 DOCKERFILE
 selenium-server-4.7.0.jar
+webdrivermanager-5.3.1-fat.jar
+msedgedriver.exe

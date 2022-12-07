@@ -78,4 +78,18 @@ function main() {
   }
 }
 
+const inputMap = {};
+
+document.addEventListener('keydown', (e) => {
+  e = e || event // for ie
+  inputMap[e.key.toLowerCase()] = e.type == 'keydown';
+  console.log(inputMap);
+});
+
+document.addEventListener('keyup', (e) => {
+  e = e || event // for ie
+  inputMap[e.key.toLowerCase()] = e.type == 'keydown';
+  console.log(inputMap);
+});
+
 main();
