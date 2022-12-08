@@ -1,6 +1,6 @@
 import { LitElement, html } from 'lit';
 
-export class RenderRoot extends LitElement {
+export class PlayerControlsRenderRoot extends LitElement {
   static properties = {
     id: { String },
   };
@@ -19,4 +19,4 @@ export class RenderRoot extends LitElement {
     return html`<canvas id="${this.id}"></canvas>`;
   }
 }
-customElements.define('render-root', RenderRoot);
+customElements.define('player-controls-render-root', PlayerControlsRenderRoot);

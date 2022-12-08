@@ -25,7 +25,7 @@ describe('Player controls', () => {
   });
 
   beforeEach(async () => {
-    parent = document.createElement('render-root');
+    parent = document.createElement('layer-controls-render-root');
     document.body.appendChild(parent);
     await $('<render-root />');
     renderCanvas = parent.getCanvas();
