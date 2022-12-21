@@ -4,7 +4,6 @@ import { Entity } from './Entity.mjs';
 import { GLTFLoader } from '../resources/threejs/r146/examples/jsm/loaders/GLTFLoader.js';
 import * as SkeletonUtils from '../resources/threejs/r146/examples/jsm/utils/SkeletonUtils.js';
 import { Velocity, Skin, AnimationTree } from './Components.mjs';
-import Utils from './UtilsFunctions.mjs';
 
 // Globals
 // delta time
@@ -19,6 +18,9 @@ mainScene.name = 'Top';
 const canvas = document.querySelector('#threejs-canvas');
 
 function main() {
+  let mixer;
+  let runAction;
+  let runningStopRightFootAction;
   // create our player entity
   const player = new Entity('player');
   player.addComponent(Velocity, 0.0, 0.0, 0.06, 0.001);
@@ -29,7 +31,8 @@ function main() {
 
   // start loading stuff
   const gltfloader = new GLTFLoader(manager);
-  gltfloader.load('../resources/models/test-model-withcamera2.gltf', (gltf) => {
+  gltfloader.load('../resources/models/base-human-male-model.gltf', (gltf) => {
+    console.log(gltf);
     // get a copy of our models
     const sceneClone = SkeletonUtils.clone(gltf.scene);
 
@@ -57,9 +60,56 @@ function main() {
       },
     });
 
+    // delete me
+    mixer = new THREE.AnimationMixer(mainScene);
+    runAction = mixer.clipAction(Object.values(gltf.animations)[1]);
+    runningStopRightFootAction = mixer.clipAction(
+      Object.values(gltf.animations)[3]
+    );
+    // runAction.timeScale = 1.0;
+    runningStopRightFootAction.timeScale = 1.2;
+    runningStopRightFootAction.loop = THREE.LoopOnce;
+
     // add our camera to the top of the scene
     camera = sceneClone.getObjectByName('Camera');
     mainScene.add(camera);
+  });
+
+  // ways to get current frame
+  //   const FRAME_RATE = 24;
+
+  // cosnt animationTime = animationMixer.time;
+
+  // const frameIndex = Math.floor(animationTime*FRAME_RATE);
+
+  const inputMap = {};
+
+  const FRAME_RATE = 24;
+
+  // messing with crossfades atm, need to find a good animation setup for player
+  document.addEventListener('keydown', (e) => {
+    e = e || event; // for ie
+    inputMap[e.key.toLowerCase()] = e.type == 'keydown';
+    if (inputMap['w'] == true) {
+      console.log(runningStopRightFootAction.isRunning());
+      if (runningStopRightFootAction.isRunning()) {
+        runAction.reset();
+        runAction.crossFadeFrom(runningStopRightFootAction, 0.25);
+      } else {
+        runAction.reset();
+        runAction.play();
+      }
+    } else if (inputMap['s'] == true) {
+      console.log('wtf');
+      runningStopRightFootAction.reset();
+      runningStopRightFootAction.play();
+      runAction.crossFadeTo(runningStopRightFootAction, 0.25);
+    }
+  });
+
+  document.addEventListener('keyup', (e) => {
+    e = e || event; // for ie
+    inputMap[e.key.toLowerCase()] = e.type == 'keydown';
   });
 
   function start() {
@@ -69,27 +119,13 @@ function main() {
     renderer.setPixelRatio(0.66);
     // set the size of the canvas and let threejs take control of the style
     renderer.setSize(canvas.clientWidth, canvas.clientHeight, true);
-    // ANIMATION LOOP where all the logic happens!
-    Utils.angleOf(new THREE.Vector3(0, 0, 0), new THREE.Vector3(0, 0, 3));
     renderer.setAnimationLoop(() => {
-      deltaTime = clock.getDelta;
+      deltaTime = clock.getDelta();
+      // const frameIndex = Math.floor(mixer.time * FRAME_RATE) % FRAME_RATE;
+      mixer.update(deltaTime);
       renderer.render(mainScene, camera);
     });
   }
 }
-
-const inputMap = {};
-
-document.addEventListener('keydown', (e) => {
-  e = e || event // for ie
-  inputMap[e.key.toLowerCase()] = e.type == 'keydown';
-  console.log(inputMap);
-});
-
-document.addEventListener('keyup', (e) => {
-  e = e || event // for ie
-  inputMap[e.key.toLowerCase()] = e.type == 'keydown';
-  console.log(inputMap);
-});
 
 main();

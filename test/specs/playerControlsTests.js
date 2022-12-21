@@ -2,7 +2,7 @@ import { $ } from '@wdio/globals';
 import * as THREE from '../../resources/threejs/r146/build/three.module.js';
 import { GLTFLoader } from '../../resources/threejs/r146/examples/jsm/loaders/GLTFLoader.js';
 import * as SkeletonUtils from '../../resources/threejs/r146/examples/jsm/utils/SkeletonUtils.js';
-import '../components/renderRootComponent.js';
+import '../components/playerControlsrenderRootComponent.js';
 
 describe('Player controls', () => {
   let gltf;
@@ -16,7 +16,7 @@ describe('Player controls', () => {
   before(() => {
     const gltfloader = new GLTFLoader();
     gltfloader.load(
-      '../resources/models/test-model-withcamera2.gltf',
+      '../resources/models/test-model.gltf',
       (_gltf) => {
         gltf = _gltf;
         sceneClone = SkeletonUtils.clone(gltf.scene);
@@ -25,9 +25,9 @@ describe('Player controls', () => {
   });
 
   beforeEach(async () => {
-    parent = document.createElement('layer-controls-render-root');
+    parent = document.createElement('player-controls-render-root');
     document.body.appendChild(parent);
-    await $('<render-root />');
+    await $('<player-controls-render-root />'); // wait for the root to be available
     renderCanvas = parent.getCanvas();
     renderer = new THREE.WebGLRenderer({ canvas: renderCanvas });
     scene = new THREE.Scene();

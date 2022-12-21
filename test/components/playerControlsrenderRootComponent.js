@@ -10,7 +10,7 @@ export class PlayerControlsRenderRoot extends LitElement {
   }
 
   getCanvas() {
-    let childElement = this.shadowRoot.querySelector("#c");
+    let childElement = this.shadowRoot.querySelector('#c');
     return childElement;
   }
 
