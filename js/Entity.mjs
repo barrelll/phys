@@ -24,6 +24,10 @@ class Entity {
       return table[Component.name];
     };
 
+    this.hasComponent = (Component) => {
+      return table.hasOwnProperty(Component.name);
+    };
+
     this.update = () => {
       for (const keys in table) {
         table[keys].update();

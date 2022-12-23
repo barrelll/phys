@@ -29,7 +29,7 @@ class Velocity extends Component {
 }
 
 class Skin extends Component {
-  constructor(_entity, _model, _animMixer) {
+  constructor(_entity, _model, _animMixer, _machine) {
     super(_entity);
     // error handling, need specific types
     if (_model.isObject3D) {
@@ -41,6 +41,22 @@ class Skin extends Component {
           ' needs an Object3d'
       );
     }
+
+    // error handling of anim mixer
+    if (_animMixer instanceof AnimationMixer) {
+      this.animMixer = _animMixer;
+    } else {
+      throw new Error(
+        'animMixer is not of type AnimationMixer, component: ' +
+          this.parentEntity.getId() +
+          ' needs an AnimationMixer'
+      );
+    }
+    this.machine = _machine; // our animation machine, will handle the states of our animations
+    // add functionality to our skin based on our _machine
+    // start the machine
+    const state = _machine.state;
+    _machine[state].start();
   }
 
   update(params = {}) {
@@ -49,6 +65,5 @@ class Skin extends Component {
     }
   }
 }
-
 
 export { Skin, Velocity };

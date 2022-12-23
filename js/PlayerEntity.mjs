@@ -14,6 +14,12 @@ const inputMap = {};
 document.addEventListener('keydown', (e) => {
   e = e || event; // for ie
   inputMap[e.key.toLowerCase()] = e.type == 'keydown';
+  if (inputMap['w'] == true) {
+    PLAYER.getComponent(Skin).dispatchEvent({
+      type: 'CrossFadeToWalk',
+      state: 'Idle',
+    });
+  }
 });
 
 document.addEventListener('keyup', (e) => {
@@ -44,40 +50,58 @@ PLAYER.createComponents = (scene, manager) => {
     const animClips = Object.values(gltf.animations);
     const idleAnimAction = mixer.clipAction(animClips[0]);
     const walkAnimAction = mixer.clipAction(animClips[5]);
-    // const runAnimAction = mixer.clipAction(animClips[1]);
-    console.log(gltf);
+    const runAnimAction = mixer.clipAction(animClips[1]);
     // defining our state machine for Animation State Handle
-    let machine = {
-      initialState: 'Idle',
-      currentState: initialState,
+    const startState = 'Idle';
+    const machine = {
+      state: startState,
       Idle: {
+        action: idleAnimAction,
+        start() {
+          this.action.play();
+        },
+        stop() {
+          this.action.stop();
+        },
         transitions: {
-          ToWalk: {
-            target: 'Walk',
-            action() {
-              currentState = 'ToWalk';
-              console.log(currentState)
-              idleAnimAction.crossFadeTo(walkAnimAction, time);
+          'CrossFadeToWalk': {
+            time: 0.25, // time for crossfade
+            target: 'Walk', // target to change state to
+            trigger() { // trigger will return true when the conditions for action to happen apply
+              return false;
+            },
+            action(time) { // functionality of our action
+              walkAnimAction.play();
+              idleAnimAction.crossFadeTo(walkAnimAction, this.time);
             },
           },
         },
       },
       Walk: {
+        action: walkAnimAction,
+        start() {
+          this.action.play();
+        },
+        stop() {
+          this.action.stop();
+        },
         transitions: {
-          ToIdle: {
-            target: 'Idle',
-            action() {
-              walkAnimAction.crossFadeTo(idleAnimAction, 0.25);
+          'CrossFadeToIdle': {
+            time: 0.25, // time for crossfade
+            target: 'Idle', // target to change state to 
+            trigger() { // trigger will return true when the conditions for action to happen apply
+              return false;
+            },
+            action() { // functionality of our action
+              idleAnimAction.play();
+              walkAnimAction.crossFadeTo(idleAnimAction, this.time);
             },
           },
         },
       },
     };
-    machine.Idle.transitions.ToWalk.action();
-    // create our animation tree handle for our Skin component
-    PLAYER.addComponent(AnimationStateHandle, machine);
     // add the rig as a component to our player entity
-    PLAYER.addComponent(Skin, modelParent, mixer);
+    PLAYER.addComponent(Skin, modelParent, mixer, machine);
     // add our camera to the scene for now
     CAMERA = sceneClone.getObjectByName('Camera');
     scene.add(CAMERA);

@@ -1,6 +1,7 @@
 'use strict';
 import * as THREE from '../resources/threejs/r146/build/three.module.js';
-import { AnimationStateHandle, Skin } from './Components.mjs';
+import ANIMATION_SYSTEM from './AnimationSystem.mjs';
+import { Skin } from './Components.mjs';
 import { PLAYER, CAMERA } from './PlayerEntity.mjs';
 
 // Globals
@@ -21,7 +22,7 @@ function start() {
   renderer.setSize(canvas.clientWidth, canvas.clientHeight, true);
   renderer.setAnimationLoop(() => {
     deltaTime = clock.getDelta();
-    PLAYER.getComponent(Skin).update({ deltaTime });
+    ANIMATION_SYSTEM.update(deltaTime, { PLAYER });
     renderer.render(mainScene, CAMERA);
   });
 }
