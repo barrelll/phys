@@ -1,6 +1,7 @@
 import {
   AnimationMixer,
   EventDispatcher,
+  MixOperation,
 } from '../resources/threejs/r146/build/three.module.js';
 import { Entity } from './Entity.mjs';
 
@@ -31,6 +32,7 @@ class Skin extends Component {
   constructor(_entity, _model, _animMixer) {
     super(_entity);
     // error handling, need specific types
+    this.crossFadeUpdate = false;
     if (_model.isObject3D) {
       this.model = _model;
     } else {
@@ -41,6 +43,15 @@ class Skin extends Component {
       );
     }
     if (_animMixer instanceof AnimationMixer) {
+      _animMixer.addEventListener('startCrossFade', (data) => {
+        this.endTime = data.end;
+        this.crossFadeUpdate = true;
+      });
+      _animMixer.addEventListener('endCrossFade', (data) => {
+        this.parentEntity.getComponent(AnimationStateHandle).transExit('Idle')
+        console.log('exited idle');
+        this.crossFadeUpdate = false;
+      });
       this.animMixer = _animMixer;
     } else {
       throw new Error(
@@ -62,6 +73,12 @@ class Skin extends Component {
   }
 
   update(params = {}) {
+    if (this.crossFadeUpdate) {
+      if (this.animMixer.time > this.endTime) {
+        this.animMixer.dispatchEvent({ type: 'endCrossFade' });
+      }
+    }
+
     if (params.deltaTime) {
       this.animMixer.update(params.deltaTime);
     }
@@ -80,18 +97,21 @@ class AnimationStateHandle extends Component {
         start() {
           _machine[this.state].actions.OnEnter();
         },
-        transition(currentState, event) {
+        transEnter(currentState, event) {
           const currStateDef = _machine[currentState];
           const desTransition = currStateDef.transitions[event];
           const toState = desTransition.target;
           const desStateDef = _machine[toState];
 
           desTransition.action();
-          currStateDef.actions.OnExit();
           desStateDef.actions.OnEnter();
 
           this.state = toState;
           return this.state;
+        },
+        transExit(state) {
+          const prevState = _machine[state]
+          prevState.actions.OnExit();
         },
       };
       return ret;
@@ -104,8 +124,12 @@ class AnimationStateHandle extends Component {
     this.machine.start();
   }
 
-  transition(event) {
-    this.machine.transition(this.machine.state, event);
+  transEnter(event) {
+    this.machine.transEnter(this.machine.state, event);
+  }
+
+  transExit(state) {
+    this.machine.transExit(state);
   }
 }
 

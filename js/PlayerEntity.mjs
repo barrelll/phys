@@ -16,7 +16,7 @@ document.addEventListener('keydown', (e) => {
   e = e || event; // for ie
   inputMap[e.key.toLowerCase()] = e.type == 'keydown';
   if (inputMap['w'] == true) {
-    PLAYER.getComponent(AnimationStateHandle).transition('ToWalk');
+    PLAYER.getComponent(AnimationStateHandle).transEnter('ToWalk');
   }
 });
 
@@ -45,10 +45,6 @@ PLAYER.createComponents = (scene, manager) => {
     scene.add(modelParent);
     // get our animation info here
     const mixer = new AnimationMixer(scene);
-    mixer.addEventListener('finished', (obj) => {
-      console.log('finished' + obj);
-    });
-    mixer.transitionInterval = 0.25;
     const animClips = Object.values(gltf.animations);
     const idleAnimAction = mixer.clipAction(animClips[0]);
     const walkAnimAction = mixer.clipAction(animClips[5]);
@@ -61,7 +57,6 @@ PLAYER.createComponents = (scene, manager) => {
       Idle: {
         actions: {
           OnEnter() {
-            idleAnimAction.reset();
             idleAnimAction.play();
           },
           OnExit() {
@@ -72,7 +67,10 @@ PLAYER.createComponents = (scene, manager) => {
           ToWalk: {
             target: 'Walk',
             action() {
-              idleAnimAction.crossFadeTo(walkAnimAction, 3);
+              let time = 0.30;
+              let end = time + mixer.time;
+              mixer.dispatchEvent({ type: 'startCrossFade', end });
+              idleAnimAction.crossFadeTo(walkAnimAction, time);
             },
           },
         },
@@ -80,7 +78,6 @@ PLAYER.createComponents = (scene, manager) => {
       Walk: {
         actions: {
           OnEnter() {
-            walkAnimAction.reset();
             walkAnimAction.play();
           },
           OnExit() {
@@ -91,7 +88,7 @@ PLAYER.createComponents = (scene, manager) => {
           ToIdle: {
             target: 'Idle',
             action() {
-              console.log('Heading back to idle');
+              walkAnimAction.crossFadeTo(idleAnimAction, 0.25);
             },
           },
         },
