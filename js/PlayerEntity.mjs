@@ -1,13 +1,12 @@
 import {
   AnimationMixer,
-  LoopRepeat,
   Object3D,
   PerspectiveCamera,
 } from '../resources/threejs/r146/build/three.module.js';
 import { Entity } from './Entity.mjs';
 import { GLTFLoader } from '../resources/threejs/r146/examples/jsm/loaders/GLTFLoader.js';
 import * as SkeletonUtils from '../resources/threejs/r146/examples/jsm/utils/SkeletonUtils.js';
-import { AnimationStateHandle, Skin } from './Components.mjs';
+import { Skin } from './Components.mjs';
 
 // add our input map for player controls
 const inputMap = {};
@@ -15,9 +14,6 @@ const inputMap = {};
 document.addEventListener('keydown', (e) => {
   e = e || event; // for ie
   inputMap[e.key.toLowerCase()] = e.type == 'keydown';
-  if (inputMap['w'] == true) {
-    PLAYER.getComponent(AnimationStateHandle).transEnter('ToWalk');
-  }
 });
 
 document.addEventListener('keyup', (e) => {
@@ -48,42 +44,25 @@ PLAYER.createComponents = (scene, manager) => {
     const animClips = Object.values(gltf.animations);
     const idleAnimAction = mixer.clipAction(animClips[0]);
     const walkAnimAction = mixer.clipAction(animClips[5]);
-    idleAnimAction.setLoop(LoopRepeat, 4);
     // const runAnimAction = mixer.clipAction(animClips[1]);
     console.log(gltf);
     // defining our state machine for Animation State Handle
     let machine = {
       initialState: 'Idle',
+      currentState: initialState,
       Idle: {
-        actions: {
-          OnEnter() {
-            idleAnimAction.play();
-          },
-          OnExit() {
-            idleAnimAction.stop();
-          },
-        },
         transitions: {
           ToWalk: {
             target: 'Walk',
             action() {
-              let time = 0.30;
-              let end = time + mixer.time;
-              mixer.dispatchEvent({ type: 'startCrossFade', end });
+              currentState = 'ToWalk';
+              console.log(currentState)
               idleAnimAction.crossFadeTo(walkAnimAction, time);
             },
           },
         },
       },
       Walk: {
-        actions: {
-          OnEnter() {
-            walkAnimAction.play();
-          },
-          OnExit() {
-            walkAnimAction.stop();
-          },
-        },
         transitions: {
           ToIdle: {
             target: 'Idle',
@@ -94,6 +73,7 @@ PLAYER.createComponents = (scene, manager) => {
         },
       },
     };
+    machine.Idle.transitions.ToWalk.action();
     // create our animation tree handle for our Skin component
     PLAYER.addComponent(AnimationStateHandle, machine);
     // add the rig as a component to our player entity
