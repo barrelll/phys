@@ -19,19 +19,6 @@ ANIMATION_SYSTEM.update = (deltaTime, params = {}) => {
         );
       }
       const skin = entity.getComponent(Skin);
-      const curState = skin.machine.state;
-      const actions = skin.machine[curState].actions;
-      for (const aKey in actions) {
-        let action = actions[aKey];
-        if (actions[aKey].trigger()) {
-          const steps = actions[aKey].steps;
-          steps.onBegin(deltaTime).then((resolved) => {
-            steps.onProgress(deltaTime).then((resolved) => {
-              console.log(resolved);
-            });
-          });
-        }
-      }
       skin.update({ deltaTime });
     }
   }

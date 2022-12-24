@@ -45,7 +45,6 @@ class Skin extends Component {
     this.machine[state].animAction.play();
   }
 
-
   update(params = {}) {
     if (params.deltaTime) {
       this.animMixer.update(params.deltaTime);
@@ -53,4 +52,54 @@ class Skin extends Component {
   }
 }
 
-export { Skin };
+// state machine builder, assumes order of insertion when running
+class MachineBuilder {
+  map = new Map();
+  current = '';
+  step = 0;
+  // name of the current state to edit
+  state(name) {
+    // create new state and set the curr key to edit, as the name
+    if (!this.map.has(name)) {
+      this.map.set(name, new Array());
+    }
+    this.current = name;
+    return this;
+  }
+  // x is something that can be resolved to a bool
+  when(x) {
+    const state = this.map.get(this.current);
+    const resolve = () => {
+      try {
+        return x.call() == true;
+      } catch (error) {
+        return x == true;
+      }
+    };
+    if (state.length === 0) {
+      state.push({ whens: [resolve], dos: [] });
+    } else {
+      const step = state[this.step];
+      step.whens.push(resolve);
+    }
+    return this;
+  }
+  do(y) {
+    const state = this.map.get(this.current);
+    if (state.length === 0) {
+      // should throw an error here? whens should be mapped to dos, and vice versa
+      // state.push({ whens: [], dos: [] });
+    } else {
+      const step = state[this.step];
+      // should throw if y is not callable?
+      step.dos.push(y);
+    }
+    return this;
+  }
+  build(defaultState = this.current) {
+    this.map.state = defaultState;
+    return this.map;
+  }
+}
+
+export { Skin, MachineBuilder };

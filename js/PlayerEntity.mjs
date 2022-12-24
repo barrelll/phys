@@ -6,7 +6,7 @@ import {
 import { Entity } from './Entity.mjs';
 import { GLTFLoader } from '../resources/threejs/r146/examples/jsm/loaders/GLTFLoader.js';
 import * as SkeletonUtils from '../resources/threejs/r146/examples/jsm/utils/SkeletonUtils.js';
-import { Skin } from './Components.mjs';
+import { MachineBuilder, Skin } from './Components.mjs';
 
 // add our input map for player controls
 const inputMap = {};
@@ -78,14 +78,14 @@ PLAYER.createComponents = (scene, manager) => {
               onProgress(deltaTime) {
                 // functionality of our action
                 return new Promise((resolve) => {
-                  const crossfade =  machine.Idle.actions.CrossFade;
+                  const crossfade = machine.Idle.actions.CrossFade;
                   const duration = crossfade.duration;
                   crossfade.timer += deltaTime;
                   walkAnimAction.play();
                   idleAnimAction.crossFadeTo(walkAnimAction, duration);
                   if (!crossfade.trigger()) {
                     resolve('onAbort');
-                  } else if(crossfade.timer >= crossfade.duration) {
+                  } else if (crossfade.timer >= crossfade.duration) {
                     // reset timer
                     crossfade.timer = 0.0;
                     resolve('onEnd');
