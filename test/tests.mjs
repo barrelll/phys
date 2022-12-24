@@ -27,7 +27,7 @@ describe('Utils.angleOf', function () {
 });
 
 describe('Components.MachineBuilder', function () {
-  it('should create a Map object such that multiple whens are mapped to one do', function () {
+  it(`should create a Map object such that multiple 'whens' are mapped to one 'do'`, function () {
     const builder = new MachineBuilder();
     const machine = builder
       .state('State')
@@ -47,7 +47,8 @@ describe('Components.MachineBuilder', function () {
     chai.expect(dos_val).to.be.equal(1);
     chai.expect(machine.state).to.be.equal('State');
   });
-  it('should create a Map object such that multiple dos are mapped to one whens', function () {
+
+  it(`should create a Map object such that multiple 'dos' are mapped to one 'whens'`, function () {
     const builder = new MachineBuilder();
     const machine = builder
       .state('State')
@@ -67,7 +68,8 @@ describe('Components.MachineBuilder', function () {
     chai.expect(dos_val).to.be.equal(2);
     chai.expect(machine.state).to.be.equal('State');
   });
-  it('should create a Map object such that multiple dos are mapped to multiple whens', function () {
+
+  it(`should create a Map object such that multiple 'dos' are mapped to multiple 'whens'`, function () {
     const builder = new MachineBuilder();
     const machine = builder
       .state('State')
@@ -89,5 +91,100 @@ describe('Components.MachineBuilder', function () {
     const dos_val = machine.get('State')[0].dos.length;
     chai.expect(dos_val).to.be.equal(2);
     chai.expect(machine.state).to.be.equal('State');
+  });
+
+  it(`should resolve as true when each of current steps 'whens' values are true`, function () {
+    let x = true;
+    const builder = new MachineBuilder();
+    const machine = builder
+      .state('State')
+      .when(() => {
+        return x;
+      })
+      .when(() => {
+        return x;
+      })
+      .do(() => {
+        return x;
+      })
+      .build();
+    let resolve = true;
+    const whens = machine.get('State')[0].whens;
+    whens.forEach((element) => {
+      resolve = resolve && element();
+    });
+    chai.expect(resolve).to.be.equal(true);
+  });
+
+  it(`should resolve as false when each of current steps 'whens' values are false`, function () {
+    let x = false;
+    const builder = new MachineBuilder();
+    const machine = builder
+      .state('State')
+      .when(() => {
+        return x;
+      })
+      .when(() => {
+        return x;
+      })
+      .do(() => {
+        return x;
+      })
+      .build();
+    let resolve = true;
+    const whens = machine.get('State')[0].whens;
+    whens.forEach((element) => {
+      resolve = resolve && element();
+    });
+    chai.expect(resolve).to.be.equal(false);
+  });
+
+  it(`should resolve as false when one of current steps 'whens' values are false`, function () {
+    let x = true;
+    const builder = new MachineBuilder();
+    const machine = builder
+      .state('State')
+      .when(x)
+      .when(() => {
+        return false;
+      })
+      .do(() => {
+        return x;
+      })
+      .build();
+    let resolve = true;
+    const whens = machine.get('State')[0].whens;
+    whens.forEach((element) => {
+      resolve = resolve && element();
+    });
+    chai.expect(resolve).to.be.equal(false);
+  });
+
+  it(`should throw an error when attempting to map a 'do' with no 'whens'`, function () {
+    const builder = new MachineBuilder();
+    chai
+      .expect(() => {
+        const machine = builder
+          .state('State')
+          .do(() => {})
+          .build();
+      })
+      .to.throw();
+  });
+
+  it(`should throw an error when attempting to map a 'do' in a new 'state' with no 'whens'`, function () {
+    const x = true;
+    const builder = new MachineBuilder();
+    chai
+      .expect(() => {
+        const machine = builder
+          .state('State')
+          .when(x)
+          .do(() => {})
+          .state('State2')
+          .do(() => {})
+          .build();
+      })
+      .to.throw();
   });
 });

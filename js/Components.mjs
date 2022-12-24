@@ -59,6 +59,8 @@ class MachineBuilder {
   step = 0;
   // name of the current state to edit
   state(name) {
+    // when creating a new state step is back to 0
+    this.step = 0;
     // create new state and set the curr key to edit, as the name
     if (!this.map.has(name)) {
       this.map.set(name, new Array());
@@ -86,9 +88,8 @@ class MachineBuilder {
   }
   do(y) {
     const state = this.map.get(this.current);
-    if (state.length === 0) {
-      // should throw an error here? whens should be mapped to dos, and vice versa
-      // state.push({ whens: [], dos: [] });
+    if (state.length === 0 || state[this.step].whens.length === 0) {
+      throw new Error(`Attempting to map a 'do' with no 'whens' for state: ` + `${this.current}`);
     } else {
       const step = state[this.step];
       // should throw if y is not callable?
