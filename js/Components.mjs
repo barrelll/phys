@@ -1,7 +1,6 @@
 import {
   AnimationMixer,
   EventDispatcher,
-  MixOperation,
 } from '../resources/threejs/r146/build/three.module.js';
 import { Entity } from './Entity.mjs';
 
@@ -14,18 +13,6 @@ class Component extends EventDispatcher {
       throw new Error('Parent entity not of type Entity');
     }
   }
-}
-
-class Velocity extends Component {
-  constructor(_entity, _min, _cur, _max, _inc) {
-    super(_entity);
-    this.minVelocity = _min;
-    this.currVelocity = _cur;
-    this.maxVelocity = _max;
-    this.increaseBy = _inc;
-  }
-
-  update(params = {}) {}
 }
 
 class Skin extends Component {
@@ -52,12 +39,12 @@ class Skin extends Component {
           ' needs an AnimationMixer'
       );
     }
-    this.machine = _machine; // our animation machine, will handle the states of our animations
-    // add functionality to our skin based on our _machine
-    // start the machine
     const state = _machine.state;
-    _machine[state].start();
+    this.machine = _machine; // our animation machine, will handle the states of our animations
+    // start the default state
+    this.machine[state].animAction.play();
   }
+
 
   update(params = {}) {
     if (params.deltaTime) {
@@ -66,4 +53,4 @@ class Skin extends Component {
   }
 }
 
-export { Skin, Velocity };
+export { Skin };

@@ -1,7 +1,6 @@
 'use strict';
 import * as THREE from '../resources/threejs/r146/build/three.module.js';
 import ANIMATION_SYSTEM from './AnimationSystem.mjs';
-import { Skin } from './Components.mjs';
 import { PLAYER, CAMERA } from './PlayerEntity.mjs';
 
 // Globals

@@ -14,12 +14,6 @@ const inputMap = {};
 document.addEventListener('keydown', (e) => {
   e = e || event; // for ie
   inputMap[e.key.toLowerCase()] = e.type == 'keydown';
-  if (inputMap['w'] == true) {
-    PLAYER.getComponent(Skin).dispatchEvent({
-      type: 'CrossFadeToWalk',
-      state: 'Idle',
-    });
-  }
 });
 
 document.addEventListener('keyup', (e) => {
@@ -56,45 +50,88 @@ PLAYER.createComponents = (scene, manager) => {
     const machine = {
       state: startState,
       Idle: {
-        action: idleAnimAction,
-        start() {
-          this.action.play();
-        },
-        stop() {
-          this.action.stop();
-        },
-        transitions: {
-          'CrossFadeToWalk': {
-            time: 0.25, // time for crossfade
+        animAction: idleAnimAction,
+        actions: {
+          CrossFade: {
+            duration: 0.3, // time for crossfade
+            timer: 0.0,
             target: 'Walk', // target to change state to
-            trigger() { // trigger will return true when the conditions for action to happen apply
-              return false;
+            settings: {
+              stepsPlayOnce: true,
             },
-            action(time) { // functionality of our action
-              walkAnimAction.play();
-              idleAnimAction.crossFadeTo(walkAnimAction, this.time);
+            trigger() {
+              // trigger will return true when the conditions for action to happen apply
+              return (
+                inputMap['w'] || inputMap['a'] || inputMap['s'] || inputMap['d']
+              );
+            },
+            steps: {
+              onBegin(deltaTime) {
+                // functionality of our action
+                return new Promise((resolve) => {
+                  if (!idleAnimAction.isRunning()) {
+                    idleAnimAction.play();
+                  }
+                  resolve('onProgress');
+                });
+              },
+              onProgress(deltaTime) {
+                // functionality of our action
+                return new Promise((resolve) => {
+                  const crossfade =  machine.Idle.actions.CrossFade;
+                  const duration = crossfade.duration;
+                  crossfade.timer += deltaTime;
+                  walkAnimAction.play();
+                  idleAnimAction.crossFadeTo(walkAnimAction, duration);
+                  if (!crossfade.trigger()) {
+                    resolve('onAbort');
+                  } else if(crossfade.timer >= crossfade.duration) {
+                    // reset timer
+                    crossfade.timer = 0.0;
+                    resolve('onEnd');
+                  }
+                  // resolve('onAbort');
+                });
+              },
+              onAbort(deltaTime) {},
+              onEnd(deltaTime) {
+                return new Promise((resolve) => {
+                  console.log('onEnd: ' + data);
+                  idleAnimAction.stop();
+                  resolve();
+                });
+              },
             },
           },
         },
       },
       Walk: {
-        action: walkAnimAction,
-        start() {
-          this.action.play();
-        },
-        stop() {
-          this.action.stop();
-        },
-        transitions: {
-          'CrossFadeToIdle': {
-            time: 0.25, // time for crossfade
-            target: 'Idle', // target to change state to 
-            trigger() { // trigger will return true when the conditions for action to happen apply
-              return false;
+        actions: {
+          CrossFade: {
+            duration: 0.25, // time for crossfade
+            target: 'Idle', // target to change state to
+            trigger() {
+              // trigger will return true when the conditions for action to happen apply
+              return !(
+                inputMap['w'] ||
+                inputMap['a'] ||
+                inputMap['s'] ||
+                inputMap['d']
+              );
             },
-            action() { // functionality of our action
-              idleAnimAction.play();
-              walkAnimAction.crossFadeTo(idleAnimAction, this.time);
+            steps: {
+              onBegin(data) {
+                // functionality of our action
+                idleAnimAction.play();
+              },
+              onProgress(data) {
+                // functionality of our action
+                idleAnimAction.crossFadeTo(walkAnimAction, this.duration);
+              },
+              onAbort(data) {},
+              onEnd(data) {
+                idleAnimAction.stop();
+              },
             },
           },
         },
