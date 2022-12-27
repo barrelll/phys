@@ -39,10 +39,6 @@ class Skin extends Component {
           ' needs an AnimationMixer'
       );
     }
-    const state = _machine.state;
-    this.machine = _machine; // our animation machine, will handle the states of our animations
-    // start the default state
-    this.machine[state].animAction.play();
   }
 
   update(params = {}) {
@@ -57,6 +53,7 @@ class MachineBuilder {
   map = new Map();
   current = '';
   step = 0;
+  called = false;
   // name of the current state to edit
   state(name) {
     // when creating a new state step is back to 0
@@ -71,6 +68,10 @@ class MachineBuilder {
   // x is something that can be resolved to a bool
   when(x) {
     const state = this.map.get(this.current);
+    if (this.called) {
+      this.step += 1;
+      this.called = false;
+    }
     const resolve = () => {
       try {
         return x.call() == true;
@@ -78,7 +79,7 @@ class MachineBuilder {
         return x == true;
       }
     };
-    if (state.length === 0) {
+    if (state.length === this.step) {
       state.push({ whens: [resolve], dos: [] });
     } else {
       const step = state[this.step];
@@ -95,9 +96,14 @@ class MachineBuilder {
       // should throw if y is not callable?
       step.dos.push(y);
     }
+    this.called = true;
     return this;
   }
   build(defaultState = this.current) {
+    const state = this.map.get(this.current);
+    if (state.length === 0 || state[this.step].whens.length === 0 || state[this.step].dos.length === 0) {
+      throw new Error(`Need to map something! Empty state not allowed: ` + `${this.current}`);
+    }
     this.map.state = defaultState;
     return this.map;
   }

@@ -187,4 +187,42 @@ describe('Components.MachineBuilder', function () {
       })
       .to.throw();
   });
+
+  it(`should throw an error when attempting to map 'whens' with no 'dos'`, function () {
+    const x = true;
+    const builder = new MachineBuilder();
+    chai
+      .expect(() => {
+        const machine = builder
+          .state('State')
+          .when(x)
+          .state('State2')
+          .build();
+      })
+      .to.throw();
+  });
+
+  it(`should create a new set of 'dos' & 'whens' after calling 'when' after a 'do'`, function () {
+    const x = true;
+    const builder = new MachineBuilder();
+    const machine = builder
+      .state('State')
+      .when(x)
+      .when(() => {
+        return false;
+      })
+      .do(() => {
+        return x;
+      })
+      .when(x)
+      .when(x)
+      .do(() => {
+        return x;
+      })
+      .build();
+    const state = machine.get('State');
+    console.log('\n');
+    console.table(state);
+    chai.expect(state.length).to.be.equal(2);
+  });
 });

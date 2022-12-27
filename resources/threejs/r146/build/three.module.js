@@ -45930,13 +45930,13 @@ class AnimationAction {
 
 	}
 
-	fadeIn( duration ) {
+	fadeIn( duration, weightNow = 0, weightThen = 1) {
 
-		return this._scheduleFading( duration, 0, 1 );
+		return this._scheduleFading( duration, weightNow, weightThen );
 
 	}
 
-	fadeOut( duration ) {
+	fadeOut( duration,  weightNow = 1, weightThen = 0) {
 
 		return this._scheduleFading( duration, 1, 0 );
 
