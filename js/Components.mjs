@@ -39,6 +39,8 @@ class Skin extends Component {
           ' needs an AnimationMixer'
       );
     }
+
+    this.machine = _machine;
   }
 
   update(params = {}) {
@@ -57,6 +59,7 @@ class MachineBuilder {
   // name of the current state to edit
   state(name) {
     // when creating a new state step is back to 0
+    this.called = false;
     this.step = 0;
     // create new state and set the curr key to edit, as the name
     if (!this.map.has(name)) {
@@ -76,6 +79,7 @@ class MachineBuilder {
       try {
         return x.call() == true;
       } catch (error) {
+        console.log(x);
         return x == true;
       }
     };

@@ -160,6 +160,28 @@ describe('Components.MachineBuilder', function () {
     chai.expect(resolve).to.be.equal(false);
   });
 
+  it(`should resolve as false when one of current steps 'whens' is an object with a value of false`, function () {
+    let x = {w: false};
+    let y = false;
+    const builder = new MachineBuilder();
+    const machine = builder
+      .state('State')
+      .when(x['w'] && y)
+      .when(() => {
+        return true;
+      })
+      .do(() => {
+        return x;
+      })
+      .build();
+    let resolve = true;
+    const whens = machine.get('State')[0].whens;
+    whens.forEach((element) => {
+      resolve = resolve && element();
+    });
+    chai.expect(resolve).to.be.equal(false);
+  });
+
   it(`should throw an error when attempting to map a 'do' with no 'whens'`, function () {
     const builder = new MachineBuilder();
     chai

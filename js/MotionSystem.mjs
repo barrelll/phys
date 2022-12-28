@@ -19,6 +19,25 @@ MOTION_SYSTEM.update = (deltaTime, params = {}) => {
         );
       }
       const skin = entity.getComponent(Skin);
+      const curState = skin.machine.get(skin.machine.state);
+      if (curState == undefined) {
+        console.log(skin.machine.state);
+      } else {
+        curState.forEach((step) => {
+        let resolve = true;
+        step.whens.forEach((w) => {
+          // check each when function and resolve whether we should do the thing
+          resolve = resolve && w();
+          if (resolve) {
+            // doo aaaallll the dooooos 
+            step.dos.forEach((d) => {
+              d();
+            })
+          }
+        });
+      });
+      }
+
       skin.update({ deltaTime });
     }
   }

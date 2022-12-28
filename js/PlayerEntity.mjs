@@ -6,12 +6,22 @@ import {
 import { Entity } from './Entity.mjs';
 import { GLTFLoader } from '../resources/threejs/r146/examples/jsm/loaders/GLTFLoader.js';
 import * as SkeletonUtils from '../resources/threejs/r146/examples/jsm/utils/SkeletonUtils.js';
-import { Skin } from './Components.mjs';
+import { MachineBuilder, Skin } from './Components.mjs';
 import { LoopRepeat } from '../resources/threejs/r146/build/three.module.js';
 import Utils from './UtilsFunctions.mjs';
 
 // add our input map for player controls
 const inputMap = {};
+
+document.addEventListener('keydown', (e) => {
+  e = e || event; // for ie
+  inputMap[e.key.toLowerCase()] = e.type == 'keydown';
+});
+
+document.addEventListener('keyup', (e) => {
+  e = e || event; // for ie
+  inputMap[e.key.toLowerCase()] = e.type == 'keydown';
+});
 
 // our globals
 let CAMERA = new PerspectiveCamera();
@@ -35,34 +45,58 @@ PLAYER.createComponents = (scene, manager) => {
     // get our animation info here
     const mixer = new AnimationMixer(scene);
     const animClips = Object.values(gltf.animations);
-    const idleAnimAction = mixer.clipAction(animClips[0]);
+    const idleAnimAction = mixer.clipAction(animClips[0]).play();
     const walkAnimAction = mixer
       .clipAction(animClips[5])
       .setEffectiveTimeScale(1.4);
     const runAnimAction = mixer.clipAction(animClips[1]);
-    let lastAction = idleAnimAction;
     // defining our state machine for Animation State Handle
-    let pressonce = true;
-    document.addEventListener('keydown', (e) => {
-      e = e || event; // for ie
-      const key = e.key.toLowerCase();
-      inputMap[key] = e.type == 'keydown';
-      if (inputMap['w'] && pressonce) {
-        console.log(inputMap);
-        lastAction = inputMap['shift'] ? runAnimAction : walkAnimAction;
-        Utils.fadeToAction(lastAction, idleAnimAction, 0.3);
-        pressonce = false;
-      }
-    });
-    document.addEventListener('keyup', (e) => {
-      e = e || event; // for ie
-      inputMap[e.key.toLowerCase()] = e.type == 'keydown';
-      Utils.fadeToAction(idleAnimAction, lastAction, 0.6);
-      pressonce = true;
-    });
-    idleAnimAction.play();
-    walkAnimAction.loop = LoopRepeat;
-    let machine = {};
+    const builder = new MachineBuilder();
+    let machine = builder
+      .state('Idle')
+      .when(() => {
+        return inputMap['w'] || inputMap['a'] || inputMap['s'] || inputMap['d'];
+      })
+      .do(() => {
+        // fade to walk anim
+        Utils.fadeToAction(walkAnimAction, idleAnimAction, 0.3);
+        machine.state = 'WalkIdle';
+      })
+      .state('WalkIdle')
+      .when(() => {
+        // when we are not running idleAnim and running walkAnim, we're in the walk state
+        return !idleAnimAction.isRunning() && walkAnimAction.isRunning();
+      })
+      .do(() => {
+        machine.state = 'Walk';
+      })
+      .when(() => {
+        return !(
+          inputMap['w'] ||
+          inputMap['a'] ||
+          inputMap['s'] ||
+          inputMap['d']
+        );
+      })
+      .do(() => {
+        Utils.fadeToAction(idleAnimAction, walkAnimAction, 0.3);
+        machine.state = 'Idle';
+      })
+      .state('Walk')
+      .when(() => {
+        return !(
+          inputMap['w'] ||
+          inputMap['a'] ||
+          inputMap['s'] ||
+          inputMap['d']
+        );
+      })
+      .do(() => {
+        Utils.fadeToAction(idleAnimAction, walkAnimAction, 0.3);
+        machine.state = 'Idle';
+      })
+      .build('Idle');
+    console.log(machine);
     // add the rig as a component to our player entity
     PLAYER.addComponent(Skin, modelParent, mixer, machine);
     // add our camera to the scene for now
