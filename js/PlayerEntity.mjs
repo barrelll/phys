@@ -6,26 +6,9 @@ import {
 import { Entity } from './Entity.mjs';
 import { GLTFLoader } from '../resources/threejs/r146/examples/jsm/loaders/GLTFLoader.js';
 import * as SkeletonUtils from '../resources/threejs/r146/examples/jsm/utils/SkeletonUtils.js';
-import { MachineBuilder, Skin } from './Components.mjs';
+import { Skin } from './Components.mjs';
 import { LoopRepeat } from '../resources/threejs/r146/build/three.module.js';
-import { AnimationUtils } from '../resources/threejs/r146/build/three.module.js';
-
-function fadeToAction(activeAction, previousAction, duration) {
-  const previousActionWeight = previousAction.weight;
-  console.log(previousAction.isRunning())
-  if (!previousAction.isRunning()) {
-    previousAction.reset();
-  }
-  previousAction
-    .fadeOut(duration, previousActionWeight, 0)
-    .play();
-
-  const activeActionWeight = activeAction.weight;
-  activeAction
-    .reset()
-    .fadeIn(duration, activeActionWeight, 1)
-    .play();
-}
+import Utils from './UtilsFunctions.mjs';
 
 // add our input map for player controls
 const inputMap = {};
@@ -52,11 +35,10 @@ PLAYER.createComponents = (scene, manager) => {
     // get our animation info here
     const mixer = new AnimationMixer(scene);
     const animClips = Object.values(gltf.animations);
-    // animClips.forEach((element) => {
-    //   AnimationUtils.makeClipAdditive(element);
-    // });
     const idleAnimAction = mixer.clipAction(animClips[0]);
-    const walkAnimAction = mixer.clipAction(animClips[5]);
+    const walkAnimAction = mixer
+      .clipAction(animClips[5])
+      .setEffectiveTimeScale(1.2);
     const runAnimAction = mixer.clipAction(animClips[1]);
     // defining our state machine for Animation State Handle
     let pressonce = true;
@@ -64,14 +46,14 @@ PLAYER.createComponents = (scene, manager) => {
       e = e || event; // for ie
       inputMap[e.key.toLowerCase()] = e.type == 'keydown';
       if (inputMap['w'] && pressonce) {
-        fadeToAction(walkAnimAction, idleAnimAction, 0.25);
+        Utils.fadeToAction(walkAnimAction, idleAnimAction, 0.3);
         pressonce = false;
       }
     });
     document.addEventListener('keyup', (e) => {
       e = e || event; // for ie
       inputMap[e.key.toLowerCase()] = e.type == 'keydown';
-      fadeToAction(idleAnimAction, walkAnimAction, 0.25);
+      Utils.fadeToAction(idleAnimAction, walkAnimAction, 0.3);
       pressonce = true;
     });
     idleAnimAction.play();

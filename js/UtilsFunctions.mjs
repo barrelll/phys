@@ -15,4 +15,18 @@ Utils.angleOf = function (_v1, _v2, params = ['x', 'z']) {
   return Math.atan2(y, x);
 };
 
+Utils.fadeToAction = function (toAction, fromAction, duration) {
+  fromAction.reset();
+  const fromActionWeight = fromAction.getEffectiveWeight();
+  const p_startAt = fromAction.time;
+  fromAction.startAt(p_startAt).fadeOut(duration, fromActionWeight, 0).play();
+
+  toAction.reset();
+  const toActionWeight = toAction.isRunning()
+    ? toAction.getEffectiveWeight()
+    : 0;
+  const a_startAt = toAction.time;
+  toAction.startAt(a_startAt).fadeIn(duration, toActionWeight, 1).play();
+};
+
 export default Utils;

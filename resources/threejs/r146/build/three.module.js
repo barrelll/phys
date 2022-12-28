@@ -45938,7 +45938,7 @@ class AnimationAction {
 
 	fadeOut( duration,  weightNow = 1, weightThen = 0) {
 
-		return this._scheduleFading( duration, 1, 0 );
+		return this._scheduleFading( duration, weightNow, weightThen );
 
 	}
 
