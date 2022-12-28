@@ -32,7 +32,6 @@ const res = '../resources/models/base-human-male-model.gltf';
 PLAYER.createComponents = (scene, manager) => {
   const gltfloader = new GLTFLoader(manager);
   gltfloader.load(res, (gltf) => {
-    console.log(gltf);
     // get a copy of our models
     const sceneClone = SkeletonUtils.clone(gltf.scene);
     // get male model from gltf, it needs a parent to help organize animations
@@ -45,58 +44,135 @@ PLAYER.createComponents = (scene, manager) => {
     // get our animation info here
     const mixer = new AnimationMixer(scene);
     const animClips = Object.values(gltf.animations);
-    const idleAnimAction = mixer.clipAction(animClips[0]).play();
+    // play our default anim
+    const idleAnimAction = mixer.clipAction(animClips[0]).play(); 
     const walkAnimAction = mixer
       .clipAction(animClips[5])
       .setEffectiveTimeScale(1.4);
     const runAnimAction = mixer.clipAction(animClips[1]);
+    // some functions to organize the whens
+    let wasd_notshift_pressed = () => {
+      return (
+        (inputMap['w'] || inputMap['a'] || inputMap['s'] || inputMap['d']) &&
+        !inputMap['shift']
+      );
+    };
+    let wasd_shift_pressed = () => {
+      return (
+        (inputMap['w'] || inputMap['a'] || inputMap['s'] || inputMap['d']) &&
+        inputMap['shift']
+      );
+    };
+    let wasd_released = () => {
+      return !(
+        inputMap['w'] ||
+        inputMap['a'] ||
+        inputMap['s'] ||
+        inputMap['d']
+      );
+    };
+    let shift_released = () => {
+      return !inputMap['shift'];
+    };
+    // duration for state machine transitions
+    const duration = 0.3;
     // defining our state machine for Animation State Handle
     const builder = new MachineBuilder();
     let machine = builder
+      /** IDLE STATE **/
       .state('Idle')
-      .when(() => {
-        return inputMap['w'] || inputMap['a'] || inputMap['s'] || inputMap['d'];
-      })
+      .when(wasd_notshift_pressed) // jump to walkidle
       .do(() => {
-        // fade to walk anim
-        Utils.fadeToAction(walkAnimAction, idleAnimAction, 0.3);
+        Utils.fadeToAction(walkAnimAction, idleAnimAction, duration);
         machine.state = 'WalkIdle';
       })
+      .when(wasd_shift_pressed) // jump to runidle
+      .do(() => {
+        Utils.fadeToAction(runAnimAction, idleAnimAction, duration);
+        machine.state = 'RunIdle';
+      })
+      /** WALKIDLE STATE **/
       .state('WalkIdle')
-      .when(() => {
+      .when(() => { // when crossfade finishes
         // when we are not running idleAnim and running walkAnim, we're in the walk state
         return !idleAnimAction.isRunning() && walkAnimAction.isRunning();
       })
       .do(() => {
         machine.state = 'Walk';
       })
-      .when(() => {
-        return !(
-          inputMap['w'] ||
-          inputMap['a'] ||
-          inputMap['s'] ||
-          inputMap['d']
-        );
-      })
+      .when(wasd_released) // back to idle
       .do(() => {
-        Utils.fadeToAction(idleAnimAction, walkAnimAction, 0.3);
+        Utils.fadeToAction(idleAnimAction, walkAnimAction, duration);
         machine.state = 'Idle';
       })
+      .when(wasd_shift_pressed) // jump to runwalk
+      .do(() => {
+        Utils.fadeToAction(runAnimAction, walkAnimAction, duration);
+        machine.state = 'RunWalk';
+      })
+      /** WALK STATE **/
       .state('Walk')
-      .when(() => {
-        return !(
-          inputMap['w'] ||
-          inputMap['a'] ||
-          inputMap['s'] ||
-          inputMap['d']
-        );
+      .when(wasd_released) // back to idle
+      .do(() => {
+        Utils.fadeToAction(idleAnimAction, walkAnimAction, duration);
+        machine.state = 'Idle';
+      })
+      .when(wasd_shift_pressed) // jump to runwalk
+      .do(() => {
+        Utils.fadeToAction(runAnimAction, walkAnimAction, duration);
+        machine.state = 'RunWalk';
+      })
+      /** RUNIDLE STATE **/
+      .state('RunIdle')
+      .when(() => { // when crossfade finishes
+        // when we are not running idleAnim and running runAnim, we're in the run state
+        return !idleAnimAction.isRunning() && runAnimAction.isRunning();
       })
       .do(() => {
-        Utils.fadeToAction(idleAnimAction, walkAnimAction, 0.3);
+        machine.state = 'Run';
+      })
+      .when(wasd_released) // back to idle
+      .do(() => {
+        Utils.fadeToAction(idleAnimAction, runAnimAction, duration);
         machine.state = 'Idle';
+      })
+      .when(shift_released) // back to walk
+      .do(() => {
+        Utils.fadeToAction(walkAnimAction, runAnimAction, duration);
+        machine.state = 'Walk';
+      })
+      /** RUNWALK STATE **/
+      .state('RunWalk')
+      .when(() => { // when crossfade finishes
+        // when we are not running walkAnim and running runAnim, we're in the run state
+        return !walkAnimAction.isRunning() && runAnimAction.isRunning();
+      })
+      .do(() => {
+        machine.state = 'Run';
+      })
+      .when(wasd_released) // back to idle
+      .do(() => {
+        Utils.fadeToAction(idleAnimAction, runAnimAction, duration);
+        machine.state = 'Idle';
+      })
+      .when(shift_released) // back to walk
+      .do(() => {
+        Utils.fadeToAction(walkAnimAction, runAnimAction, duration);
+        machine.state = 'Walk';
+      })
+      /** RUN STATE **/
+      .state('Run')
+      .when(wasd_released) // back to idle
+      .do(() => {
+        Utils.fadeToAction(idleAnimAction, runAnimAction, duration);
+        machine.state = 'Idle';
+      })
+      .when(shift_released) // back to walk
+      .do(() => {
+        Utils.fadeToAction(walkAnimAction, runAnimAction, duration);
+        machine.state = 'Walk';
       })
       .build('Idle');
-    console.log(machine);
     // add the rig as a component to our player entity
     PLAYER.addComponent(Skin, modelParent, mixer, machine);
     // add our camera to the scene for now
