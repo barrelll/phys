@@ -1,6 +1,6 @@
 'use strict';
 import * as THREE from '../resources/threejs/r146/build/three.module.js';
-import ANIMATION_SYSTEM from './AnimationSystem.mjs';
+import MOTION_SYSTEM from './MotionSystem.mjs';
 import { PLAYER, CAMERA } from './PlayerEntity.mjs';
 
 // Globals
@@ -21,7 +21,7 @@ function start() {
   renderer.setSize(canvas.clientWidth, canvas.clientHeight, true);
   renderer.setAnimationLoop(() => {
     deltaTime = clock.getDelta();
-    ANIMATION_SYSTEM.update(deltaTime, { PLAYER });
+    MOTION_SYSTEM.update(deltaTime, { PLAYER });
     renderer.render(mainScene, CAMERA);
   });
 }

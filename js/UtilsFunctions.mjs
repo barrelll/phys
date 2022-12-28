@@ -15,6 +15,7 @@ Utils.angleOf = function (_v1, _v2, params = ['x', 'z']) {
   return Math.atan2(y, x);
 };
 
+// fade to or from animationAction's
 Utils.fadeToAction = function (toAction, fromAction, duration) {
   fromAction.reset();
   const fromActionWeight = fromAction.getEffectiveWeight();

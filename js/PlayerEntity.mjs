@@ -38,22 +38,26 @@ PLAYER.createComponents = (scene, manager) => {
     const idleAnimAction = mixer.clipAction(animClips[0]);
     const walkAnimAction = mixer
       .clipAction(animClips[5])
-      .setEffectiveTimeScale(1.2);
+      .setEffectiveTimeScale(1.4);
     const runAnimAction = mixer.clipAction(animClips[1]);
+    let lastAction = idleAnimAction;
     // defining our state machine for Animation State Handle
     let pressonce = true;
     document.addEventListener('keydown', (e) => {
       e = e || event; // for ie
-      inputMap[e.key.toLowerCase()] = e.type == 'keydown';
+      const key = e.key.toLowerCase();
+      inputMap[key] = e.type == 'keydown';
       if (inputMap['w'] && pressonce) {
-        Utils.fadeToAction(walkAnimAction, idleAnimAction, 0.3);
+        console.log(inputMap);
+        lastAction = inputMap['shift'] ? runAnimAction : walkAnimAction;
+        Utils.fadeToAction(lastAction, idleAnimAction, 0.3);
         pressonce = false;
       }
     });
     document.addEventListener('keyup', (e) => {
       e = e || event; // for ie
       inputMap[e.key.toLowerCase()] = e.type == 'keydown';
-      Utils.fadeToAction(idleAnimAction, walkAnimAction, 0.3);
+      Utils.fadeToAction(idleAnimAction, lastAction, 0.6);
       pressonce = true;
     });
     idleAnimAction.play();
