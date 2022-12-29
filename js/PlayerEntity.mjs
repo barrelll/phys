@@ -24,6 +24,9 @@ PLAYER.createComponents = (scene, manager) => {
   gltfloader.load(res, (gltf) => {
     // get a copy of our models
     const sceneClone = SkeletonUtils.clone(gltf.scene);
+    // add our camera to the scene
+    CAMERA = sceneClone.getObjectByName('Camera');
+    scene.add(CAMERA);
     // get male model from gltf, it needs a parent to help organize animations
     // we'll use an object3d for parenting and transforms
     const maleModel = sceneClone.getObjectByName('human-male');
@@ -64,6 +67,47 @@ PLAYER.createComponents = (scene, manager) => {
     let shift_released = () => {
       return !inputMap['shift'];
     };
+
+    // functions for rotating
+    const axis = new Vector3(0, 1, 0);
+    let getOffset = () => {
+      if (inputMap['w']) {
+        if (inputMap['a']) {
+          return (5 * Math.PI) / 4;
+        } else if (inputMap['d']) {
+          return (3 * Math.PI) / 4;
+        }
+        return Math.PI;
+      } else if (inputMap['a']) {
+        if (inputMap['w']) {
+          return (5 * Math.PI) / 4;
+        } else if (inputMap['s']) {
+          return (7 * Math.PI) / 4;
+        }
+        return (3 * Math.PI) / 2;
+      } else if (inputMap['s']) {
+        if (inputMap['a']) {
+          return (7 * Math.PI) / 4;
+        } else if (inputMap['d']) {
+          return Math.PI / 4;
+        }
+        return 0.0;
+      } else if (inputMap['d']) {
+        if (inputMap['w']) {
+          return (3 * Math.PI) / 4;
+        } else if (inputMap['s']) {
+          return Math.PI / 4;
+        }
+        return Math.PI / 2;
+      }
+    };
+
+    let rotate = () => {
+      console.log(getOffset());
+      const angle = Utils.angleOf(modelParent.position, CAMERA.position);
+      const q = new Quaternion().setFromAxisAngle(axis, angle + getOffset());
+      modelParent.quaternion.rotateTowards(q, 0.12);
+    };
     // duration for state anim_machine transitions
     const duration = 0.3;
     // defining our state anim_machine for Animation State Handle
@@ -72,11 +116,13 @@ PLAYER.createComponents = (scene, manager) => {
       /** IDLE STATE **/
       .state('Idle')
       .when(wasd_notshift_pressed) // jump to walkidle
+      .do(rotate)
       .do(() => {
         Utils.fadeToAction(walkAnimAction, idleAnimAction, duration);
         anim_machine.state = 'WalkIdle';
       })
       .when(wasd_shift_pressed) // jump to runidle
+      .do(rotate)
       .do(() => {
         Utils.fadeToAction(runAnimAction, idleAnimAction, duration);
         anim_machine.state = 'RunIdle';
@@ -91,24 +137,30 @@ PLAYER.createComponents = (scene, manager) => {
       .do(() => {
         anim_machine.state = 'Walk';
       })
+      .when(wasd_notshift_pressed)
+      .do(rotate)
       .when(wasd_released) // back to idle
       .do(() => {
         Utils.fadeToAction(idleAnimAction, walkAnimAction, duration);
         anim_machine.state = 'Idle';
       })
       .when(wasd_shift_pressed) // jump to runwalk
+      .do(rotate)
       .do(() => {
         Utils.fadeToAction(runAnimAction, walkAnimAction, duration);
         anim_machine.state = 'RunWalk';
       })
       /** WALK STATE **/
       .state('Walk')
+      .when(wasd_notshift_pressed)
+      .do(rotate)
       .when(wasd_released) // back to idle
       .do(() => {
         Utils.fadeToAction(idleAnimAction, walkAnimAction, duration);
         anim_machine.state = 'Idle';
       })
       .when(wasd_shift_pressed) // jump to runwalk
+      .do(rotate)
       .do(() => {
         Utils.fadeToAction(runAnimAction, walkAnimAction, duration);
         anim_machine.state = 'RunWalk';
@@ -123,6 +175,8 @@ PLAYER.createComponents = (scene, manager) => {
       .do(() => {
         anim_machine.state = 'Run';
       })
+      .when(wasd_shift_pressed)
+      .do(rotate)
       .when(wasd_released) // back to idle
       .do(() => {
         Utils.fadeToAction(idleAnimAction, runAnimAction, duration);
@@ -143,6 +197,8 @@ PLAYER.createComponents = (scene, manager) => {
       .do(() => {
         anim_machine.state = 'Run';
       })
+      .when(wasd_shift_pressed)
+      .do(rotate)
       .when(wasd_released) // back to idle
       .do(() => {
         Utils.fadeToAction(idleAnimAction, runAnimAction, duration);
@@ -155,6 +211,8 @@ PLAYER.createComponents = (scene, manager) => {
       })
       /** RUN STATE **/
       .state('Run')
+      .when(wasd_shift_pressed)
+      .do(rotate)
       .when(wasd_released) // need to check on a special state here, do we go back to idle or do we do a running stop?
       .do(() => {
         Utils.fadeToAction(idleAnimAction, runAnimAction, duration);
@@ -168,9 +226,6 @@ PLAYER.createComponents = (scene, manager) => {
       .build('Idle');
     // add the rig as a component to our player entity
     PLAYER.addComponent(Skin, modelParent, mixer, anim_machine);
-    // add our camera to the scene
-    CAMERA = sceneClone.getObjectByName('Camera');
-    scene.add(CAMERA);
     // finally add our event listeners once player is loaded
     document.addEventListener('keydown', (e) => {
       e = e || event; // for ie
