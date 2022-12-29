@@ -21,7 +21,7 @@ MOTION_SYSTEM.update = (deltaTime, params = {}) => {
       const skin = entity.getComponent(Skin);
       const curState = skin.machine.get(skin.machine.state);
       if (curState == undefined) {
-        console.log(skin.machine.state);
+        throw new Error(`No state named ${skin.machine.state} in ${entity.getId()}`)
       } else {
         curState.forEach((step) => {
         let resolve = true;
