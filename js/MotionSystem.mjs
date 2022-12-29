@@ -19,25 +19,26 @@ MOTION_SYSTEM.update = (deltaTime, params = {}) => {
         );
       }
       const skin = entity.getComponent(Skin);
-      const curState = skin.machine.get(skin.machine.state);
+      const curState = skin.anims.get(skin.anims.state);
       if (curState == undefined) {
-        throw new Error(`No state named ${skin.machine.state} in ${entity.getId()}`)
+        throw new Error(
+          `No state named ${skin.anims.state} in ${entity.getId()}`
+        );
       } else {
         curState.forEach((step) => {
-        let resolve = true;
-        step.whens.forEach((w) => {
-          // check each when function and resolve whether we should do the thing
-          resolve = resolve && w();
-          if (resolve) {
-            // doo aaaallll the dooooos 
-            step.dos.forEach((d) => {
-              d();
-            })
-          }
+          let resolve = true;
+          step.whens.forEach((w) => {
+            // check each when function and resolve whether we should do the thing
+            resolve = resolve && w();
+            if (resolve) {
+              // doo aaaallll the dooooos
+              step.dos.forEach((d) => {
+                d();
+              });
+            }
+          });
         });
-      });
       }
-
       skin.update({ deltaTime });
     }
   }

@@ -40,7 +40,7 @@ class Skin extends Component {
       );
     }
 
-    this.machine = _machine;
+    this.anims = _machine;
   }
 
   update(params = {}) {
@@ -94,7 +94,10 @@ class MachineBuilder {
   do(y) {
     const state = this.map.get(this.current);
     if (state.length === 0 || state[this.step].whens.length === 0) {
-      throw new Error(`Attempting to map a 'do' with no 'whens' for state: ` + `${this.current}`);
+      throw new Error(
+        `Attempting to map a 'do' with no 'whens' for state: ` +
+          `${this.current}`
+      );
     } else {
       const step = state[this.step];
       // should throw if y is not callable?
@@ -105,8 +108,14 @@ class MachineBuilder {
   }
   build(defaultState = this.current) {
     const state = this.map.get(this.current);
-    if (state.length === 0 || state[this.step].whens.length === 0 || state[this.step].dos.length === 0) {
-      throw new Error(`Need to map something! Empty state not allowed: ` + `${this.current}`);
+    if (
+      state.length === 0 ||
+      state[this.step].whens.length === 0 ||
+      state[this.step].dos.length === 0
+    ) {
+      throw new Error(
+        `Need to map something! Empty state not allowed: ` + `${this.current}`
+      );
     }
     this.map.state = defaultState;
     return this.map;
